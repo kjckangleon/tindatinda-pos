@@ -10,7 +10,7 @@ create policy "Store managers upload product photos" on storage.objects for inse
 with check (
  bucket_id='product-images'
  and (storage.foldername(name))[1] is not null
- and public.has_store_role(((storage.foldername(name))[1])::uuid,array['owner','manager'])
+ and (public.is_platform_admin() or public.has_store_role(((storage.foldername(name))[1])::uuid,array['owner','manager']))
 );
 create policy "Store managers remove product photos" on storage.objects for delete to authenticated
 using (
