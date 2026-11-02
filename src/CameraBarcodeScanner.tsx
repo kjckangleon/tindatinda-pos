@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser';
 export function CameraBarcodeScanner({onDetected,onClose}:{onDetected:(code:string)=>void;onClose:()=>void}) {
  const video=useRef<HTMLVideoElement>(null);
+ const detectedRef=useRef(onDetected);
+ detectedRef.current=onDetected;
  const [error,setError]=useState('');
  const [camera,setCamera]=useState('');
  const [devices,setDevices]=useState<MediaDeviceInfo[]>([]);
@@ -16,7 +18,7 @@ export function CameraBarcodeScanner({onDetected,onClose}:{onDetected:(code:stri
     setError('');
     const reader=new BrowserMultiFormatReader();
     controls=await reader.decodeFromConstraints({audio:false,video:camera?{deviceId:{exact:camera}}:{facingMode:{ideal:'environment'}}},element!,result=>{
-     if(!disposed&&result)onDetected(result.getText());
+     if(!disposed&&result)detectedRef.current(result.getText());
     });
     if(disposed){controls.stop();return;}
     const found=await BrowserMultiFormatReader.listVideoInputDevices();
@@ -27,7 +29,7 @@ export function CameraBarcodeScanner({onDetected,onClose}:{onDetected:(code:stri
   }
   void start();
   return ()=>{disposed=true;controls?.stop();if(element?.srcObject instanceof MediaStream)(element.srcObject as MediaStream).getTracks().forEach(t=>t.stop());};
- },[camera,retry,onDetected]);
+ },[camera,retry]);
  return <section className="panel" aria-label="Camera barcode scanner" style={{marginTop:12}}>
   <div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>Camera barcode scanner</strong><button type="button" onClick={onClose}>Close camera</button></div>
   <video ref={video} autoPlay playsInline muted style={{width:'100%',maxHeight:320,objectFit:'contain',background:'#111',borderRadius:8,marginTop:12}} aria-label="Camera preview"/>
