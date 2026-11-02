@@ -69,7 +69,7 @@ async function refreshStores(){
   const contentType=response.headers.get('content-type')||'';
   if(!contentType.includes('application/json'))throw new Error('Role API returned a webpage instead of JSON (HTTP '+response.status+')');
   const role=await response.json();
-  if(response.ok){verified=role.isPlatformAdmin===true;if(!verified)apiError='API result: '+String(role.code||'UNKNOWN')+'; RPC result: '+String(roleRpc.data);}
+  if(response.ok){verified=verified||role.isPlatformAdmin===true;if(!role.isPlatformAdmin&&verified)apiError='Server API could not see your admin role ('+String(role.code||'UNKNOWN')+'), but the database RPC confirmed it. Admin actions may still fail.';else if(!verified)apiError='API result: '+String(role.code||'UNKNOWN')+'; RPC result: '+String(roleRpc.data);}
   else {verified=verified||role.isPlatformAdmin===true;apiError=String(role.code||'HTTP '+response.status)+': '+String(role.error||'Verification failed')+(role.detail?' ('+role.detail+')':'');}
  }catch(e){apiError=e instanceof Error?e.message:'Unknown network error'}
  setAdmin(verified);
