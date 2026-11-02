@@ -6,7 +6,7 @@ export default async function handler(req,res){
  if(!url||!anon||!secret)return res.status(503).json({error:'Service not configured'});
  const token=(req.headers.authorization||'').replace(/^Bearer /,'');
  if(!token)return res.status(401).json({error:'Sign in required'});
- const client=createClient(url,anon,{auth:{persistSession:false}});
+ const client=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+token}}});
  const {data:identity,error:authError}=await client.auth.getUser(token);
  if(authError||!identity.user)return res.status(401).json({error:'Invalid session'});
  const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -15,8 +15,9 @@ export default async function handler(req,res){
   if(error)return res.status(503).json({error:'Subscription database not configured'});
   return res.status(200).json({subscription:subscription||null});
  }
- const {data:role,error:roleError}=await db.from('platform_admins').select('user_id').eq('user_id',identity.user.id).maybeSingle();
- if(roleError||!role)return res.status(403).json({error:'Super Admin access required'});
+ const {data:role,error:roleError}=await client.rpc('is_platform_admin');
+ if(roleError)return res.status(503).json({error:'Admin role check failed',detail:roleError.code||'DATABASE_ERROR'});
+ if(role!==true)return res.status(403).json({error:'Super Admin access required'});
  if(req.method==='GET'){
   const users=[];let page=1;
   while(page<=20){const {data,error}=await db.auth.admin.listUsers({page,perPage:100});if(error)return res.status(500).json({error:'Could not load users'});users.push(...data.users.map(u=>({id:u.id,email:u.email})));if(data.users.length<100)break;page++;}
