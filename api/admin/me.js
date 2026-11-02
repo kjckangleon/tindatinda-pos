@@ -6,7 +6,7 @@ export default async function handler(req,res){
  if(!url||!publicKey)return res.status(503).json({error:'Missing Supabase public configuration',code:'CONFIG_MISSING'});
  const token=(req.headers.authorization||'').replace(/^Bearer /,'');
  if(!token)return res.status(401).json({error:'Sign in required',code:'TOKEN_MISSING'});
- const client=createClient(url,publicKey,{auth:{persistSession:false,autoRefreshToken:false}});
+ const client=createClient(url,publicKey,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+token}}});
  const {data:auth,error:authError}=await client.auth.getUser(token);
  if(authError||!auth.user)return res.status(401).json({error:'Session rejected by Supabase',code:'SESSION_INVALID'});
  // Query only the signed-in user's own row. RLS already permits this.
