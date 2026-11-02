@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     if (!store) return res.status(400).json({ error: 'Store not found or inactive' });
   }
   const { data, error } = await admin.auth.admin.createUser({ email: email.trim().toLowerCase(), password, email_confirm: true });
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { const invalidServiceKey = /valid Bearer token|invalid.*(jwt|token|api.?key)|jwt malformed|not authorized/i.test(error.message || ''); return res.status(invalidServiceKey ? 503 : 400).json({ error: invalidServiceKey ? 'Supabase rejected the server service-role key. Verify SUPABASE_SERVICE_ROLE_KEY in Vercel Production matches the service_role secret for this Supabase project, then redeploy.' : error.message, code: invalidServiceKey ? 'SERVICE_KEY_REJECTED' : 'USER_CREATION_FAILED' }); }
   if (storeId) {
     const { error: membershipError } = await admin.from('store_members').insert({ store_id: storeId, user_id: data.user.id, role: storeRole });
     if (membershipError) {
