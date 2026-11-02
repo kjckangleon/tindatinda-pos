@@ -10,5 +10,5 @@ test('login form validates email and requires password', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('textbox', { name: 'Email' }).fill('not-an-email');
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByRole('textbox', { name: 'Email' })).toHaveJSProperty('validity', expect.objectContaining({ typeMismatch: true }));
+  expect(await page.getByRole('textbox', { name: 'Email' }).evaluate((el: HTMLInputElement) => el.validity.typeMismatch)).toBe(true);
 });
