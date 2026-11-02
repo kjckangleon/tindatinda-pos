@@ -11,13 +11,13 @@ export default async function handler(req, res) {
   const authorization = req.headers.authorization || '';
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
   if (!token) return res.status(401).json({ error: 'Sign in required' });
-  const client = createClient(supabaseUrl, publicKey, { auth: { persistSession: false } });
+  const client = createClient(supabaseUrl, publicKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: 'Bearer ' + token } } });
   const { data: auth, error: authError } = await client.auth.getUser(token);
   if (authError || !auth.user) return res.status(401).json({ error: 'Invalid session' });
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: role, error: roleError } = await admin.from('platform_admins').select('user_id').eq('user_id', auth.user.id).maybeSingle();
-  if (roleError) return res.status(500).json({ error: 'Permission check failed' });
-  const isAdmin = Boolean(role);
+  const { data: role, error: roleError } = await client.rpc('is_platform_admin');
+  if (roleError) return res.status(500).json({ error: 'Permission check failed', detail: roleError.code || 'DATABASE_ERROR' });
+  const isAdmin = role === true;
   const { email, password, storeId, role: storeRole } = req.body || {};
   if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof password !== 'string' || password.length < 12 || password.length > 128) return res.status(400).json({ error: 'Valid email and password of 12–128 characters required' });
   if (storeId && (!/^[0-9a-f-]{36}$/i.test(storeId) || !['owner','manager','cashier'].includes(storeRole))) return res.status(400).json({ error: 'Invalid store or role' });
