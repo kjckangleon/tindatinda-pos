@@ -16,10 +16,16 @@ export default async function handler(req, res) {
   if (authError || !auth.user) return res.status(401).json({ error: 'Invalid session' });
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: role, error: roleError } = await admin.from('platform_admins').select('user_id').eq('user_id', auth.user.id).maybeSingle();
-  if (roleError || !role) return res.status(403).json({ error: 'Super Admin only' });
+  if (roleError) return res.status(500).json({ error: 'Permission check failed' });
+  const isAdmin = Boolean(role);
   const { email, password, storeId, role: storeRole } = req.body || {};
   if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || typeof password !== 'string' || password.length < 12 || password.length > 128) return res.status(400).json({ error: 'Valid email and password of 12–128 characters required' });
   if (storeId && (!/^[0-9a-f-]{36}$/i.test(storeId) || !['owner','manager','cashier'].includes(storeRole))) return res.status(400).json({ error: 'Invalid store or role' });
+  if (!isAdmin) {
+    if (!storeId || storeRole !== 'cashier') return res.status(403).json({ error: 'Managers may create cashiers only' });
+    const { data: membership, error: membershipError } = await admin.from('store_members').select('role').eq('store_id', storeId).eq('user_id', auth.user.id).maybeSingle();
+    if (membershipError || !membership || !['manager', 'owner'].includes(membership.role)) return res.status(403).json({ error: 'Not authorized for this store' });
+  }
   if (storeId) {
     const { data: store } = await admin.from('stores').select('id').eq('id',storeId).eq('active',true).maybeSingle();
     if (!store) return res.status(400).json({ error: 'Store not found or inactive' });
