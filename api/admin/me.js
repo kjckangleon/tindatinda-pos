@@ -13,10 +13,5 @@ export default async function handler(req,res){
  const {data:ownRole,error:ownError}=await client.from('platform_admins').select('user_id').eq('user_id',auth.user.id).maybeSingle();
  if(ownError)return res.status(500).json({error:'Authenticated role lookup failed',code:'ROLE_READ_FAILED',detail:ownError.code||'DATABASE_ERROR'});
  if(!ownRole)return res.status(200).json({isPlatformAdmin:false,code:'NO_MATCHING_ROLE'});
- if(!secret)return res.status(503).json({isPlatformAdmin:true,error:'Service role key missing; admin actions unavailable',code:'SERVICE_KEY_MISSING'});
- const admin=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
- const {data:serverRole,error:serverError}=await admin.from('platform_admins').select('user_id').eq('user_id',auth.user.id).maybeSingle();
- if(serverError)return res.status(503).json({isPlatformAdmin:true,error:'Server-side role verification failed; admin actions unavailable',code:'SERVICE_ROLE_FAILED',detail:serverError.code||'DATABASE_ERROR'});
- if(!serverRole)return res.status(503).json({isPlatformAdmin:true,error:'Service key cannot read matching admin row',code:'SERVICE_ROLE_NO_MATCH'});
  return res.status(200).json({isPlatformAdmin:true,code:'VERIFIED'});
 }
