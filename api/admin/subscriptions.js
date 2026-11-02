@@ -21,6 +21,7 @@ export default async function handler(req,res){
  if(req.method==='GET'){
   const users=[];let page=1;
   while(page<=20){const {data,error}=await db.auth.admin.listUsers({page,perPage:100});if(error)return res.status(500).json({error:'Could not load users'});users.push(...data.users.map(u=>({id:u.id,email:u.email})));if(data.users.length<100)break;page++;}
+  if(req.query?.scope==='users')return res.status(200).json({users,subscriptions:[]});
   const {data:subscriptions,error}=await db.from('user_subscriptions').select('*');
   if(error)return res.status(503).json({error:'Run migration 003_user_subscriptions.sql in Supabase first'});
   return res.status(200).json({users,subscriptions});
