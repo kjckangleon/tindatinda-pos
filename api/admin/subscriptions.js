@@ -10,6 +10,11 @@ export default async function handler(req,res){
  const {data:identity,error:authError}=await client.auth.getUser(token);
  if(authError||!identity.user)return res.status(401).json({error:'Invalid session'});
  const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
+ if(req.method==='GET'&&req.query?.scope==='me'){
+  const {data:subscription,error}=await db.from('user_subscriptions').select('plan,starts_at,expires_at').eq('user_id',identity.user.id).maybeSingle();
+  if(error)return res.status(503).json({error:'Subscription database not configured'});
+  return res.status(200).json({subscription:subscription||null});
+ }
  const {data:role,error:roleError}=await db.from('platform_admins').select('user_id').eq('user_id',identity.user.id).maybeSingle();
  if(roleError||!role)return res.status(403).json({error:'Super Admin access required'});
  if(req.method==='GET'){
