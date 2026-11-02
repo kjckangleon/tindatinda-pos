@@ -70,11 +70,11 @@ async function refreshStores(){
   if(!contentType.includes('application/json'))throw new Error('Role API returned a webpage instead of JSON (HTTP '+response.status+')');
   const role=await response.json();
   if(response.ok)verified=role.isPlatformAdmin===true;
-  else apiError=String(role.error||'HTTP '+response.status);
+  else {verified=verified||role.isPlatformAdmin===true;apiError=String(role.code||'HTTP '+response.status)+': '+String(role.error||'Verification failed')+(role.detail?' ('+role.detail+')':'');}
  }catch(e){apiError=e instanceof Error?e.message:'Unknown network error'}
  setAdmin(verified);
- if(verified){setError('');setTab(current=>current==='pos'&&!stores.data?.length?'admin':current)}
- else setError('Super Admin verification failed for '+(session.user.email||'signed-in account')+'. '+(apiError?'API: '+apiError+'. ':'')+(roleRpc.error?'Database: '+roleRpc.error.message+'. ':'')+'Check that this signed-in account is in platform_admins.');
+ if(verified){setError(apiError?'Super Admin detected, but administrative actions may fail: '+apiError:'');setTab(current=>current==='pos'&&!stores.data?.length?'admin':current)}
+ else setError('Super Admin verification failed for '+(session.user.email||'signed-in account')+'. '+(apiError?'API: '+apiError+'. ':'')+(roleRpc.error?'Database: '+roleRpc.error.message+'. ':'')+'Please report this diagnostic message.');
 }
 useEffect(()=>{if(admin&&(tab==='staff'||(!shop&&tab!=='account'&&tab!=='admin')))setTab('admin')},[admin,shop,tab]);
 useEffect(()=>{if(user)void refreshStores();else{setShops([]);setShop('');setAdmin(false)}},[user?.id]);
