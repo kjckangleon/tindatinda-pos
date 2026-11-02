@@ -75,7 +75,7 @@ async function refreshStores(){
  }catch(e){apiError=e instanceof Error?e.message:'Unknown network error'}
  setAdmin(verified);
  if(verified){setError(apiError?'Super Admin detected, but administrative actions may fail: '+apiError:'');setTab(current=>current==='pos'&&!stores.data?.length?'admin':current)}
- else setError('Super Admin verification failed for '+(session.user.email||'signed-in account')+'. '+(apiError?'API: '+apiError+'. ':'')+(roleRpc.error?'Database: '+roleRpc.error.message+'. ':'')+'Please report this diagnostic message.');
+ else {setTab(current=>current==='admin'||current==='subscriptions'?'pos':current);if(roleRpc.error)setError('Could not verify account permissions: '+roleRpc.error.message);else if(apiError&&!apiError.startsWith('API result: NO_MATCHING_ROLE; RPC result: false'))setError('Account permission check unavailable: '+apiError);else setError(stores.error?stores.error.message:'');}
 }
 useEffect(()=>{if(admin&&(tab==='staff'||(!shop&&tab!=='account'&&tab!=='admin')))setTab('admin')},[admin,shop,tab]);
 useEffect(()=>{if(user)void refreshStores();else{setShops([]);setShop('');setAdmin(false)}},[user?.id]);
