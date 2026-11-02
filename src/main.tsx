@@ -51,7 +51,31 @@ useEffect(()=>{setMySubscription(null);setSubChecked(false);setDismissedAlert(fa
 const remaining=mySubscription?.expires_at?new Date(mySubscription.expires_at).getTime()-clock:null;
 const daysLeft=remaining===null?null:Math.max(0,Math.ceil(remaining/86400000));
 const expiryWarning=subChecked&&mySubscription&&remaining!==null&&remaining<=7*86400000;
-async function refreshStores(){if(!supabase||!user)return;const {data:{session}}=await supabase.auth.getSession();const [s,response]=await Promise.all([supabase.from('stores').select('id,name,created_at').order('name'),fetch('/api/admin/me',{headers:{Authorization:'Bearer '+(session?.access_token??'')}})]);if(s.error)setError(s.error.message);setShops(s.data??[]);const role=await response.json();if(!response.ok)setError('Could not verify Super Admin role: '+(role.error??response.status));setAdmin(response.ok&&role.isPlatformAdmin===true);setShop(current=>current&&s.data?.some(x=>x.id===current)?current:(s.data?.[0]?.id??''))}
+async function refreshStores(){
+ if(!supabase||!user)return;
+ const {data:{session}}=await supabase.auth.getSession();
+ if(!session){setError('Your session has expired. Please sign in again.');setAdmin(false);return}
+ const [stores,roleRpc]=await Promise.all([
+  supabase.from('stores').select('id,name,created_at').order('name'),
+  supabase.rpc('is_platform_admin')
+ ]);
+ if(stores.error)setError(stores.error.message);
+ setShops(stores.data??[]);
+ setShop(current=>current&&stores.data?.some(x=>x.id===current)?current:(stores.data?.[0]?.id??''));
+ let verified=roleRpc.data===true;
+ let apiError='';
+ try{
+  const response=await fetch('/api/admin/me',{headers:{Authorization:'Bearer '+session.access_token,'Accept':'application/json'},cache:'no-store'});
+  const contentType=response.headers.get('content-type')||'';
+  if(!contentType.includes('application/json'))throw new Error('Role API returned a webpage instead of JSON (HTTP '+response.status+')');
+  const role=await response.json();
+  if(response.ok)verified=role.isPlatformAdmin===true;
+  else apiError=String(role.error||'HTTP '+response.status);
+ }catch(e){apiError=e instanceof Error?e.message:'Unknown network error'}
+ setAdmin(verified);
+ if(verified){setError('');setTab(current=>current==='pos'&&!stores.data?.length?'admin':current)}
+ else setError('Super Admin verification failed for '+(session.user.email||'signed-in account')+'. '+(apiError?'API: '+apiError+'. ':'')+(roleRpc.error?'Database: '+roleRpc.error.message+'. ':'')+'Check that this signed-in account is in platform_admins.');
+}
 useEffect(()=>{if(admin&&(tab==='staff'||(!shop&&tab!=='account'&&tab!=='admin')))setTab('admin')},[admin,shop,tab]);
 useEffect(()=>{if(user)void refreshStores();else{setShops([]);setShop('');setAdmin(false)}},[user?.id]);
 async function refreshData(){if(!supabase||!shop)return;const [p,s]=await Promise.all([supabase.from('products').select('*').eq('store_id',shop).order('name'),supabase.from('sales').select('id,total_cents,created_at').eq('store_id',shop).order('created_at',{ascending:false}).limit(20)]);if(p.error)setError(p.error.message);setProducts(p.data??[]);setSales(s.data??[])}
