@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createClient, type User } from '@supabase/supabase-js';
 import { ShoppingCart, Package, LayoutDashboard, LogOut, Plus, ScanBarcode, Store, Shield, RefreshCcw } from 'lucide-react';
 import './style.css';
+import { resolveAdminRole } from './lib/admin-role';
 const url=import.meta.env.VITE_SUPABASE_URL as string|undefined;
 const key=import.meta.env.VITE_SUPABASE_ANON_KEY as string|undefined;
 const supabase=url&&key?createClient(url,key):null;
@@ -71,7 +72,7 @@ async function refreshStores(){
   const contentType=response.headers.get('content-type')||'';
   if(!contentType.includes('application/json'))throw new Error('Role API returned a webpage instead of JSON (HTTP '+response.status+')');
   const role=await response.json();
-  if(response.ok){verified=verified||role.isPlatformAdmin===true;if(!role.isPlatformAdmin&&verified)apiError='Server API could not see your admin role ('+String(role.code||'UNKNOWN')+'), but the database RPC confirmed it. Admin actions may still fail.';else if(!verified)apiError='API result: '+String(role.code||'UNKNOWN')+'; RPC result: '+String(roleRpc.data);}
+  if(response.ok){verified=resolveAdminRole(verified,role.isPlatformAdmin===true);if(!role.isPlatformAdmin&&verified)apiError='Server API could not see your admin role ('+String(role.code||'UNKNOWN')+'), but the database RPC confirmed it. Admin actions may still fail.';else if(!verified)apiError='API result: '+String(role.code||'UNKNOWN')+'; RPC result: '+String(roleRpc.data);}
   else {verified=verified||role.isPlatformAdmin===true;apiError=String(role.code||'HTTP '+response.status)+': '+String(role.error||'Verification failed')+(role.detail?' ('+role.detail+')':'');}
  }catch(e){apiError=e instanceof Error?e.message:'Unknown network error'}
  setAdmin(verified);
