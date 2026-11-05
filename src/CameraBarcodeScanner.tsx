@@ -50,7 +50,7 @@ export function CameraBarcodeScanner({ onDetected, onClose, title = 'Scan barcod
     const activeTrack = stream instanceof MediaStream ? stream.getVideoTracks()[0] as CameraTrack | undefined : undefined;
     if (activeTrack) {
      setTrack(activeTrack);
-     const capabilities = activeTrack.getCapabilities?.();
+     const capabilities = activeTrack.getCapabilities?.() as (MediaTrackCapabilities & { focusMode?: string[]; zoom?: { min: number; max: number; step?: number }; torch?: boolean }) | undefined;
      if (capabilities?.zoom && capabilities.zoom.max > capabilities.zoom.min) {
       setZoomRange({ min: capabilities.zoom.min, max: capabilities.zoom.max });
       const settings = activeTrack.getSettings() as MediaTrackSettings & { zoom?: number };
