@@ -23,6 +23,10 @@ export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;s
  },[client,storeId]);
  const filtered=useMemo(()=>sales.filter(s=>localDay(s.created_at)>=day&&localDay(s.created_at)<=endDay),[sales,day,endDay]);
  const gross=filtered.reduce((n,s)=>n+Number(s.total_cents),0);
+ const daily=useMemo(()=>{const totals=new Map<string,{date:string,total:number,count:number}>();for(const sale of filtered){const date=localDay(sale.created_at);const prev=totals.get(date)??{date,total:0,count:0};prev.total+=Number(sale.total_cents);prev.count++;totals.set(date,prev)}return [...totals.values()].sort((a,b)=>a.date.localeCompare(b.date))},[filtered]);
+ const peak=Math.max(1,...daily.map(x=>x.total));
+ const busiest=daily.reduce<{date:string;total:number;count:number}|null>((best,x)=>!best||x.total>best.total?x:best,null);
+
  function exportCsv(){if(!filtered.length||error)return;const rows=[['Sale ID','Date','Total PHP','Cash PHP'],...filtered.map(s=>[s.id,new Date(s.created_at).toLocaleString('en-PH',{timeZone:'Asia/Manila'}),(Number(s.total_cents)/100).toFixed(2),(Number(s.cash_cents)/100).toFixed(2)])];const csv=rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');const url=URL.createObjectURL(new Blob(['\uFEFF',csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='sales-'+day+'-'+endDay+'.csv';link.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000)}
  async function openReceipt(s:Sale){setReceiptError('');setSelected(null);const {data,error}=await client.from('sale_lines').select('id,sale_id,product_id,qty,unit_price_cents').eq('sale_id',s.id);
   if(error){setReceiptError(error.message);return}
@@ -36,6 +40,7 @@ export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;s
   <h2>Sales report</h2>
   <div className="report-dates"><label>From (Philippine time)<input aria-label="Sales date" type="date" value={day} max={endDay} onChange={e=>setDay(e.target.value)}/></label><label>To<input aria-label="End date" type="date" value={endDay} min={day} onChange={e=>setEndDay(e.target.value)}/></label><button type="button" disabled={loading||!filtered.length||!!error} onClick={exportCsv}>Export CSV</button></div>
   <div className="report-summary"><div><strong>{php(gross)}</strong><small>Sales total</small></div><div><strong>{filtered.length}</strong><small>Transactions</small></div><div><strong>{filtered.length?php(Math.round(gross/filtered.length)):'₱0.00'}</strong><small>Average sale</small></div></div>
+  {daily.length>0&&<div className="sales-trends"><h3>Daily sales trend</h3><div className="trend-bars" role="img" aria-label="Sales totals by date">{daily.map(d=><div className="trend-day" key={d.date} title={d.date+': '+php(d.total)+' from '+d.count+' transactions'}><strong>{php(d.total)}</strong><div className="trend-track"><div className="trend-fill" style={{height:Math.max(3,Math.round(d.total/peak*100))+'%'}}/></div><small>{d.date.slice(5)}</small></div>)}</div><p className="muted small">Highest sales day: {busiest?.date} ({php(busiest?.total??0)}). Based on the selected date range.</p></div>}
   <p className="muted small">Loaded {sales.length} transactions for this store (maximum 5,000). If this limit is reached, totals and exports may be incomplete.</p>
   {loading&&<p role="status">Loading sales…</p>}{error&&<p role="alert" className="error">{error}</p>}
   {!loading&&!filtered.length&&<p>No sales found for this date.</p>}
