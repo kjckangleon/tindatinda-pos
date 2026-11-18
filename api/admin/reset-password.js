@@ -23,7 +23,7 @@ export default async function handler(req,res){
  const {data:target,error:lookupError}=await db.auth.admin.getUserById(userId);
  if(lookupError||!target?.user)return res.status(404).json({error:'Account not found'});
  const temporaryPassword='Tt-'+randomBytes(24).toString('base64url');
- const {error:resetError}=await db.auth.admin.updateUserById(userId,{password:temporaryPassword});
+ const {error:resetError}=await db.auth.admin.updateUserById(userId,{password:temporaryPassword,app_metadata:{...target.user.app_metadata,force_password_change:true}});
  if(resetError)return res.status(500).json({error:'Could not reset password'});
  // Return the password once over the authenticated response. Never log it or store it in the database.
  return res.status(200).json({email:target.user.email,temporaryPassword});
