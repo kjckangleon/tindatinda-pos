@@ -23,3 +23,20 @@
 
 /* Keep uploaded product images contained in POS cards on iOS browsers. */
 .product{min-width:0;overflow:hidden}.product-icon{width:100%;height:96px;min-height:96px;overflow:hidden;flex:0 0 96px}.product-icon img{display:block;width:100%!important;height:100%!important;max-width:100%;max-height:100%;object-fit:contain!important}.product strong,.product .muted,.product b{position:relative;display:block;max-width:100%;overflow-wrap:anywhere;word-break:normal}.product-grid{min-width:0}
+
+/* Sari-sari-inspired polished action system */
+:root{--tinda-teal:#087f70;--tinda-gold:#f6b73c;--tinda-coral:#ef7059;--tinda-blue:#367cdb}
+button{transition:background-color .18s ease,box-shadow .18s ease,transform .18s ease;cursor:pointer}
+button:focus-visible{outline:3px solid #f6b73c;outline-offset:2px}
+button:disabled{cursor:not-allowed;opacity:.58}
+button.primary{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(125deg,#0c9a7b,#087f70);border:1px solid #087f70;color:#fff;border-radius:12px;font-weight:700;box-shadow:0 4px 12px #087f7026;min-height:44px}
+button.primary:hover:not(:disabled){background:linear-gradient(125deg,#087f70,#056c60);box-shadow:0 6px 16px #087f7035;transform:translateY(-1px)}
+button.icon-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:11px;min-height:40px;font-weight:600}
+button.icon-button:hover:not(:disabled){background:#e8f7f1;border-color:#149b82}
+.password-gate{background:radial-gradient(circle at top right,#fff0cf,transparent 42%),linear-gradient(140deg,#e5f8f0,#f8faf5);min-height:100vh}
+.password-gate-card{max-width:470px;width:calc(100% - 32px);border:1px solid #d8e8df;box-shadow:0 18px 50px #145d4b20;border-radius:22px}
+.password-gate-card .primary{width:100%;padding:13px 18px}
+.password-gate-icon{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,#f6b73c,#ef7059);display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px #ef705930;margin-bottom:12px}
+.password-gate-card h1{color:#123e36}
+.password-gate-card input{border-radius:11px}
+@media(max-width:600px){.password-gate-card{padding:24px 20px}.panel .item{flex-wrap:wrap;gap:10px}.panel .item .icon-button{flex-shrink:0}}
