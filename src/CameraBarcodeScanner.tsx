@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser';
+import { BrowserMultiFormatReader, BrowserQRCodeReader, type IScannerControls } from '@zxing/browser';
 
 type CameraTrack = MediaStreamTrack & {
  getCapabilities(): MediaTrackCapabilities & { focusMode?: string[]; zoom?: { min: number; max: number; step?: number }; torch?: boolean };
@@ -12,6 +12,8 @@ export function CameraBarcodeScanner({ onDetected, onClose, title = 'Scan barcod
  const detectedRef = useRef(onDetected);
  detectedRef.current = onDetected;
  const [camera, setCamera] = useState('');
+ const [mode,setMode] = useState<'barcode'|'qr'>('barcode');
+ const [lastDecoded,setLastDecoded] = useState('');
  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
  const [error, setError] = useState('');
  const [retry, setRetry] = useState(0);
@@ -29,20 +31,21 @@ export function CameraBarcodeScanner({ onDetected, onClose, title = 'Scan barcod
   let controls: IScannerControls | null = null;
   const element = videoRef.current;
   async function start() {
-   setBusy(true); setError(''); setTrack(null); setZoomRange(null); setFocusModes([]); setTorchSupported(false); setTorch(false); lastRead.current = '';
+   setBusy(true); setError(''); setLastDecoded(''); setTrack(null); setZoomRange(null); setFocusModes([]); setTorchSupported(false); setTorch(false); lastRead.current = '';
    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
     setError('Camera requires HTTPS or localhost and a supported browser.'); setBusy(false); return;
    }
    try {
-    const reader = new BrowserMultiFormatReader();
+    const reader = mode === 'qr' ? new BrowserQRCodeReader() : new BrowserMultiFormatReader();
     controls = await reader.decodeFromConstraints({
      audio: false,
-     video: camera ? { deviceId: { exact: camera } } : { facingMode: { ideal: 'environment' } }
+     video: camera ? { deviceId: { exact: camera }, width: { ideal: 1280 }, height: { ideal: 720 } } : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
     }, element!, result => {
      if (disposed || !result) return;
      const code = result.getText().trim();
      if (!code || code === lastRead.current) return;
      lastRead.current = code;
+     setLastDecoded(code);
      detectedRef.current(code);
     });
     if (disposed) { controls.stop(); return; }
@@ -81,7 +84,7 @@ export function CameraBarcodeScanner({ onDetected, onClose, title = 'Scan barcod
    controls?.stop();
    if (element?.srcObject instanceof MediaStream) (element.srcObject as MediaStream).getTracks().forEach(t => t.stop());
   };
- }, [camera, retry]);
+ }, [camera, mode, retry]);
  async function updateFocus(mode: string) {
   if (!track) return;
   try { await track.applyConstraints({ advanced: [{ focusMode: mode }] }); setFocus(mode); setError(''); }
@@ -109,8 +112,10 @@ export function CameraBarcodeScanner({ onDetected, onClose, title = 'Scan barcod
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
    <strong>{title}</strong><button type="button" onClick={onClose}>Close camera</button>
   </div>
+  <div style={{display:'flex',gap:8,marginTop:12}}><button type="button" aria-pressed={mode==='barcode'} onClick={()=>setMode('barcode')}>Product barcode</button><button type="button" aria-pressed={mode==='qr'} onClick={()=>setMode('qr')}>QR code</button></div>
   <video ref={videoRef} autoPlay playsInline muted onClick={tapToFocus} aria-label="Live barcode camera preview"
    style={{ width: '100%', maxHeight: 360, objectFit: 'contain', background: '#111', borderRadius: 8, marginTop: 12 }} />
+  {lastDecoded && <p role="status">Decoded: {lastDecoded}</p>}
   {busy && <p role="status">Starting camera…</p>}
   {error && <p role="alert" className="error">{error}</p>}
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8, alignItems: 'center' }}>
@@ -124,6 +129,6 @@ export function CameraBarcodeScanner({ onDetected, onClose, title = 'Scan barcod
    {torchSupported && <button type="button" onClick={() => void updateTorch()}>{torch ? 'Flashlight off' : 'Flashlight on'}</button>}
    <button type="button" onClick={() => setRetry(x => x+1)}>Retry camera</button>
   </div>
-  <p className="muted small">Hold the barcode steady in good light. Auto-focus, tap-to-focus, zoom and flashlight appear only when supported by the selected camera and browser. You can always enter the barcode manually.</p>
+  <p className="muted small">Choose QR code mode for square QR codes. Keep the code fully inside the camera view, hold steady in good light, and move the phone slightly farther away if blurry. Auto-focus, tap-to-focus, zoom and flashlight appear only when supported by the selected camera and browser. You can always enter the barcode manually.</p>
  </section>;
 }
