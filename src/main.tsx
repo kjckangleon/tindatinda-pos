@@ -131,10 +131,8 @@ async function saveEdit(e:React.FormEvent){e.preventDefault();if(!supabase||!sho
  if(!editName.trim()||editName.trim().length>160||editPrice.trim()===''||!Number.isSafeInteger(cents)||cents<0||!Number.isSafeInteger(delta)||Math.abs(delta)>1000000||editingProduct.stock+delta<0||editReorder.trim()===''||!Number.isSafeInteger(Number(editReorder))||Number(editReorder)<0||Number(editReorder)>1000000){setError('Enter a valid name, price and stock adjustment. Stock cannot become negative.');return;}
  setEditSaving(true);setError('');
  try{
-  const {error}=await supabase.rpc('update_inventory_product',{p_store_id:shop,p_product_id:editingProduct.id,p_name:editName.trim(),p_barcode:editBarcode.trim(),p_price_cents:cents,p_stock_delta:delta,p_reason:editReason});
+  const {error}=await supabase.rpc('update_inventory_product_with_reorder',{p_store_id:shop,p_product_id:editingProduct.id,p_name:editName.trim(),p_barcode:editBarcode.trim(),p_price_cents:cents,p_stock_delta:delta,p_reason:editReason,p_reorder_level:Number(editReorder)});
   if(error)throw error;
-  const thresholdResult=await supabase.from('products').update({reorder_level:Number(editReorder)}).eq('id',editingProduct.id).eq('store_id',shop).select('id');
-  if(thresholdResult.error||!thresholdResult.data?.length)throw new Error(thresholdResult.error?.message||'Could not save reorder level');
   setEditingProduct(null);setNotice('Product updated'+(delta!==0?' · Stock adjustment recorded':''));
   await refreshData();await refreshMovements();
  }catch(e){setError(e instanceof Error?e.message:'Could not update product. Apply migration 006_inventory_product_adjustments.sql first.')}finally{setEditSaving(false);}
