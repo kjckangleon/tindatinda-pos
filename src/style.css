@@ -11,3 +11,8 @@
 .inventory-history-heading button{padding:9px 12px;border:1px solid #d9e4e0;border-radius:9px;background:white}
 .inventory-history-list{max-height:540px;overflow:auto}
 @media(max-width:650px){.inventory-summary{gap:6px}.inventory-summary>div{padding:9px}.inventory-summary strong{font-size:21px}.inventory-filter{align-items:stretch;flex-direction:column}.inventory-filter select{max-width:none}.inventory-history-heading{align-items:flex-start;flex-direction:column}}
+
+
+.sales-report>label{display:block;max-width:260px}.report-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.report-summary>div{border:1px solid #e5ece9;border-radius:12px;padding:16px;display:grid;gap:5px}.report-summary strong{font-size:21px}.report-summary small{color:#6b817b}.receipt-panel{border:1px solid #d9e4e0;border-radius:12px;margin-top:20px;padding:20px;max-width:500px}.receipt-actions{display:flex;gap:10px;margin-top:18px}.receipt-panel .item{overflow-wrap:anywhere}.sales-report .item{flex-wrap:wrap}
+@media(max-width:650px){.report-summary{grid-template-columns:1fr}.receipt-panel{padding:12px}}
+@media print{body *{visibility:hidden!important}.receipt-print,.receipt-print *{visibility:visible!important}.receipt-print{position:absolute;top:0;left:0;width:76mm;padding:4mm;background:white;color:black;font:12px system-ui}.receipt-print .item{border-bottom:1px dashed #ccc}.receipt-actions{display:none!important}@page{size:80mm auto;margin:0}}
