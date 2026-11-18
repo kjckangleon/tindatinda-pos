@@ -121,3 +121,7 @@ GitHub API-authored commits may not trigger push workflows; use **Actions → Re
 - No automatic payment processing: subscription amounts/methods are manually entered.
 - Review existing schema, RPCs and policies before altering access control or checkout semantics.
 - Consult [AGENTS.md](./AGENTS.md) for agent-specific working rules and regression checklist.
+
+## Product editing and inventory adjustments (migration 006)
+
+Store owners/managers and platform admins can edit product names, barcodes, and prices in Inventory. Stock changes use a signed adjustment (+ restock/return, - damaged/correction) and require a reason. The `update_inventory_product` PostgreSQL RPC locks the product row, validates store access and nonnegative resulting stock, updates the product and records nonzero changes in `inventory_movements` in one transaction. Cashiers cannot edit products. Apply `supabase/migrations/006_inventory_product_adjustments.sql` to the intended Supabase project before using Save Changes; deploying the frontend alone does not install this RPC. No existing product data is reset.
