@@ -62,3 +62,7 @@ A responsive, multi-tenant sari-sari store POS SaaS with centralized platform ad
 
 ## Documentation upkeep
 Update both `README.md` and `AGENTS.md` when changing architecture, setup, commands, access control, schema, API behavior, or CI. Avoid invented functionality or unverified deployment claims.
+
+## Product editing and inventory adjustments (migration 006)
+
+Store owners/managers and platform admins can edit product names, barcodes, and prices in Inventory. Stock changes use a signed adjustment (+ restock/return, - damaged/correction) and require a reason. The `update_inventory_product` PostgreSQL RPC locks the product row, validates store access and nonnegative resulting stock, updates the product and records nonzero changes in `inventory_movements` in one transaction. Cashiers cannot edit products. Apply `supabase/migrations/006_inventory_product_adjustments.sql` to the intended Supabase project before using Save Changes; deploying the frontend alone does not install this RPC. No existing product data is reset.
