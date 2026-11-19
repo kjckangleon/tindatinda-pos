@@ -40,3 +40,5 @@ button.icon-button:hover:not(:disabled){background:#e8f7f1;border-color:#149b82}
 .password-gate-card h1{color:#123e36}
 .password-gate-card input{border-radius:11px}
 @media(max-width:600px){.password-gate-card{padding:24px 20px}.panel .item{flex-wrap:wrap;gap:10px}.panel .item .icon-button{flex-shrink:0}}
+
+.sale-transaction{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.sale-transaction-info{display:flex;flex:1 1 260px;min-width:0;flex-direction:column;gap:5px}.sale-transaction-info>strong{overflow-wrap:anywhere;color:#153d35;font-size:14px}.sale-transaction-total{white-space:nowrap;color:#087f70}.sale-transaction .icon-button{white-space:nowrap}@media(max-width:600px){.sale-transaction{align-items:flex-start}.sale-transaction-info{flex-basis:100%}.sale-transaction-total{margin-right:auto}}
