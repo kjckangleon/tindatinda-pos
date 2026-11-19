@@ -16,12 +16,16 @@ export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;s
  const [lines,setLines]=useState<Line[]>([]);
  const [names,setNames]=useState<Record<string,string>>({});
  const [receiptError,setReceiptError]=useState('');
+ const [saleItems,setSaleItems]=useState<Record<string,string>>({});
+ const [itemsLoading,setItemsLoading]=useState(false);
+ const [itemsError,setItemsError]=useState('');
  useEffect(()=>{let cancelled=false;setSales([]);setSelected(null);setError('');if(!storeId)return;
   async function load(){setLoading(true);const all:Sale[]=[];let failure='';for(let offset=0;offset<5000;offset+=500){const {data,error}=await client.from('sales').select('id,store_id,total_cents,cash_cents,created_at').eq('store_id',storeId).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+499);if(error){failure=error.message;break}all.push(...(data??[]));if((data??[]).length<500)break}
    if(!cancelled){setSales(all);setError(failure);setLoading(false)}}
   void load();return()=>{cancelled=true};
  },[client,storeId]);
  const filtered=useMemo(()=>sales.filter(s=>localDay(s.created_at)>=day&&localDay(s.created_at)<=endDay),[sales,day,endDay]);
+ useEffect(()=>{let cancelled=false;setSaleItems({});setItemsError('');if(!storeId||!filtered.length){setItemsLoading(false);return}const load=async()=>{setItemsLoading(true);try{const allLines:Line[]=[];for(let i=0;i<filtered.length;i+=150){const ids=filtered.slice(i,i+150).map(s=>s.id);const {data,error}=await client.from('sale_lines').select('id,sale_id,product_id,qty,unit_price_cents').in('sale_id',ids);if(error)throw error;allLines.push(...(data??[]))}const ids=[...new Set(allLines.map(l=>l.product_id))];const productNames:Record<string,string>={};for(let i=0;i<ids.length;i+=150){const {data,error}=await client.from('products').select('id,name').eq('store_id',storeId).in('id',ids.slice(i,i+150));if(error)throw error;for(const p of data??[])productNames[p.id]=p.name}const grouped:Record<string,string[]>={};for(const l of allLines)(grouped[l.sale_id]??=[]).push((productNames[l.product_id]??'Product '+l.product_id.slice(0,8))+' ×'+l.qty);if(!cancelled)setSaleItems(Object.fromEntries(Object.entries(grouped).map(([id,items])=>[id,items.join(', ')])))}catch(e){if(!cancelled)setItemsError(e instanceof Error?e.message:'Could not load sale items')}finally{if(!cancelled)setItemsLoading(false)}};void load();return()=>{cancelled=true}},[client,storeId,filtered]);
  const gross=filtered.reduce((n,s)=>n+Number(s.total_cents),0);
  const daily=useMemo(()=>{const totals=new Map<string,{date:string,total:number,count:number}>();for(const sale of filtered){const date=localDay(sale.created_at);const prev=totals.get(date)??{date,total:0,count:0};prev.total+=Number(sale.total_cents);prev.count++;totals.set(date,prev)}return [...totals.values()].sort((a,b)=>a.date.localeCompare(b.date))},[filtered]);
  const peak=Math.max(1,...daily.map(x=>x.total));
@@ -44,7 +48,8 @@ export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;s
   <p className="muted small">Loaded {sales.length} transactions for this store (maximum 5,000). If this limit is reached, totals and exports may be incomplete.</p>
   {loading&&<p role="status">Loading sales…</p>}{error&&<p role="alert" className="error">{error}</p>}
   {!loading&&!filtered.length&&<p>No sales found for this date.</p>}
-  {filtered.map(s=><div className="item" key={s.id}><span>{new Date(s.created_at).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'})} · #{s.id.slice(0,8)}</span><strong>{php(Number(s.total_cents))}</strong><button type="button" onClick={()=>void openReceipt(s)}>Receipt</button></div>)}
+  {itemsError&&<p role="alert" className="error">Product details unavailable: {itemsError}</p>}
+  {filtered.map(s=><div className="item sale-transaction" key={s.id}><div className="sale-transaction-info"><strong>{saleItems[s.id]??(itemsLoading?'Loading products…':'Products unavailable')}</strong><span className="muted small">{new Date(s.created_at).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'})} · Transaction #{s.id.slice(0,8)}</span></div><strong className="sale-transaction-total">{php(Number(s.total_cents))}</strong><button className="icon-button" type="button" onClick={()=>void openReceipt(s)}>View receipt</button></div>)}
   {receiptError&&<p role="alert" className="error">{receiptError}</p>}
   {selected&&<div className="receipt-panel"><div className="receipt-print"><h2>{storeName}</h2><p>Sales receipt · #{selected.id.slice(0,8)}</p><p>{new Date(selected.created_at).toLocaleString('en-PH',{timeZone:'Asia/Manila'})}</p>
     {lines.map(line=><div className="item" key={line.id}><span>{names[line.product_id]??'Product '+line.product_id.slice(0,8)} · {line.qty} × {php(line.unit_price_cents)}</span><strong>{php(line.qty*line.unit_price_cents)}</strong></div>)}
