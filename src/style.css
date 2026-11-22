@@ -57,3 +57,14 @@ button.icon-button:hover:not(:disabled){background:#e8f7f1;border-color:#149b82}
 .ice-list{max-height:370px;overflow:auto}
 @media(max-width:800px){.ice-layout{grid-template-columns:1fr}.ice-history{grid-column:auto}}
 @media(max-width:420px){.ice-two{grid-template-columns:1fr}}
+
+
+.ice-report-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:18px 0}
+.ice-report-filters label{display:grid;gap:6px;font-size:13px;font-weight:700}
+.ice-report-filters input{font-size:16px;padding:10px;border:1px solid #d0e2da;border-radius:9px}
+.ice-report-filters button,.ice-actions button{padding:11px 15px;border:1px solid #b7d7cb;border-radius:9px;background:#e9f7f2;color:#075f50;font-weight:700;cursor:pointer}
+.ice-sale-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:17px 0;border-bottom:1px solid #e3ede8}
+.ice-sale-details{display:grid;gap:5px;flex:1 1 270px;min-width:0;overflow-wrap:anywhere}
+.ice-edit{flex-basis:100%;border-radius:12px;background:#f5faf8;padding:12px}
+.ice-actions{display:flex;gap:9px}
+@media(max-width:600px){.ice-report-filters label{flex:1 1 130px}.ice-report-filters button{flex:1 1 130px}}
