@@ -4,6 +4,8 @@ type Customer={id:string;name:string;price_per_kg_cents:number;active:boolean};
 type Sale={id:string;customer_name:string;qty_centikg:number;price_per_kg_cents:number;total_cents:number;cash_cents:number;created_at:string};
 const money=(c:number)=>'₱'+(c/100).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
 const parseKg=(s:string)=>{if(!/^\d+(?:\.\d{1,2})?$/.test(s))return null;const n=Math.round(Number(s)*100);return Number.isSafeInteger(n)&&n>0&&n<=100000000?n:null};
+const PACK_SIZES=[1,2,10,15] as const;
+const validPacks=(value:string)=>/^\d+$/.test(value)&&Number.isSafeInteger(Number(value))&&Number(value)>0&&Number(value)<=1000000;
 export default function IceTemples({client,storeId,canManage}: {client:SupabaseClient;storeId:string;canManage:boolean}){
  const [customers,setCustomers]=useState<Customer[]>([]),[sales,setSales]=useState<Sale[]>([]),[packStock,setPackStock]=useState<Record<number,number>>({});
  const [name,setName]=useState(''),[rate,setRate]=useState(''),[selected,setSelected]=useState(''),[packKg,setPackKg]=useState(1),[packCount,setPackCount]=useState(''),[cash,setCash]=useState(''),[production,setProduction]=useState<Record<number,string>>({});
