@@ -70,3 +70,14 @@ button.icon-button:hover:not(:disabled){background:#e8f7f1;border-color:#149b82}
 @media(max-width:600px){.ice-report-filters label{flex:1 1 130px}.ice-report-filters button{flex:1 1 130px}}
 
 .ice-pack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}.ice-pack-card{display:grid;gap:4px;padding:14px;border:1px solid #cfe6dc;border-radius:12px;background:#f1faf6}.ice-pack-card strong{font-size:17px;color:#087f70}.ice-pack-card span{font-weight:700}.ice-pack-card small{color:#678077}.ice-daily-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.ice-daily-row span{flex:1 1 240px;font-size:13px}@media(max-width:420px){.ice-pack-grid{grid-template-columns:1fr 1fr}}
+
+
+.ice-trend{margin:22px 0;padding:18px;border:1px solid #d8eae2;border-radius:14px;background:#fbfefd}
+.ice-trend h3{margin:0 0 7px}
+.ice-trend-bars{display:flex;align-items:flex-end;gap:8px;overflow-x:auto;min-height:220px;padding:12px 2px 4px}
+.ice-trend-day{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;flex:1 0 44px;min-width:44px}
+.ice-trend-track{height:145px;width:100%;max-width:45px;display:flex;align-items:flex-end;border-bottom:1px solid #a7c9bd}
+.ice-trend-bar{width:100%;min-height:0;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#10ad95,#087f70)}
+.ice-trend-amount{font-size:10px;white-space:nowrap;color:#326b5e}
+.ice-trend-date{font-size:11px;color:#647d74}
+@media(max-width:600px){.ice-trend{padding:12px}.ice-trend-day{flex-basis:48px}}
