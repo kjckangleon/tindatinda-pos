@@ -42,3 +42,18 @@ button.icon-button:hover:not(:disabled){background:#e8f7f1;border-color:#149b82}
 @media(max-width:600px){.password-gate-card{padding:24px 20px}.panel .item{flex-wrap:wrap;gap:10px}.panel .item .icon-button{flex-shrink:0}}
 
 .sale-transaction{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.sale-transaction-info{display:flex;flex:1 1 260px;min-width:0;flex-direction:column;gap:5px}.sale-transaction-info>strong{overflow-wrap:anywhere;color:#153d35;font-size:14px}.sale-transaction-total{white-space:nowrap;color:#087f70}.sale-transaction .icon-button{white-space:nowrap}@media(max-width:600px){.sale-transaction{align-items:flex-start}.sale-transaction-info{flex-basis:100%}.sale-transaction-total{margin-right:auto}}
+
+
+/* Ice temples customer-priced kilogram checkout */
+.ice-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+.ice-layout .panel{min-width:0}.ice-form{display:grid;gap:12px;margin:16px 0}
+.ice-form label{display:grid;gap:6px;font-size:13px;font-weight:700;color:#285047}
+.ice-form input,.ice-form select{width:100%;min-width:0;box-sizing:border-box;padding:12px;border:1px solid #d0e2da;border-radius:10px;background:#fff;font-size:16px;color:#173d35}
+.ice-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ice-summary{background:#e8f7f2;border:1px solid #c9e9dc;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.ice-summary strong{font-size:23px;color:#087f70}
+.ice-notice{padding:10px 12px;background:#e7f6ee;border-radius:9px;color:#146e4b}
+.ice-history{grid-column:1/-1}.ice-history .item{flex-wrap:wrap}.ice-history .item>span{min-width:0;overflow-wrap:anywhere}
+.ice-list{max-height:370px;overflow:auto}
+@media(max-width:800px){.ice-layout{grid-template-columns:1fr}.ice-history{grid-column:auto}}
+@media(max-width:420px){.ice-two{grid-template-columns:1fr}}
