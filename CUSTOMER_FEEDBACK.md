@@ -67,3 +67,7 @@ Purpose: preserve customer-driven requirements, implementation choices, verifica
 - Never run synthetic sales/payments or destructive fixes in production.
 
 **Known risks to resolve:** current report's “Profit (sales − expenses)” is not necessarily accounting profit; legacy sales were initialized as paid during receivables migration; collection payments and paid-at-checkout amounts need consistent reporting; corrections/voids require payment-aware workflows; some report queries have pagination limits. Build/deployment success is not proof of financial correctness.
+
+## 2026-11-23 — Emmanuel: historical sales dates
+
+Customer reports no bugs so far and requests entering previous sales with editable transaction dates. Added `ice_sales.sale_date` (Philippine business date), a checkout date picker, audited `ice_change_sale_date` RPC, and sales/collections filters and CSV using the business date. `created_at` remains the immutable entry timestamp. Backfill uses existing Philippine created date. Allowed dates 2020-01-01 through today, with no future dates. Existing real sales untouched except date backfill. Caveat: backdated sales still deduct **current** pack stock, and do not reconstruct historical inventory snapshots. Production financial reconciliation and authenticated regression testing remain pending.
