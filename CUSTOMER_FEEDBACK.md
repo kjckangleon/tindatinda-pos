@@ -36,3 +36,11 @@ Purpose: preserve customer-driven requirements, implementation choices, verifica
 - Preserve transactional stock accuracy, store isolation, auditability and clear distinctions between production, sales, corrections and voids.
 - Verify deployments and tests separately. Keep unresolved limitations visible; do not silently mark them complete.
 - Before implementing new feedback, inspect current repository code, Supabase RPCs/RLS, and any affected production data shape.
+
+## 2026-11-23 — Super Admin platform audit dashboard
+
+**Owner request:** Add a weekly technical audit covering app, database, security and infrastructure, with a Super Admin dashboard, detailed reports and graphs.
+
+**Phase 1 implementation:** `src/PlatformAudit.tsx` and Super Admin navigation in `src/main.tsx`, commits `c127f0d` and `c3870b3`. Read-only store operational snapshot: 30-day retail/ice sales and revenue, inventory/product counts, out-of-stock counts, store breakdown, and daily revenue chart. Data is read through signed-in Supabase permissions. Sales lists are capped at 1,000 per store/type and warn on truncation. No new SQL migrations or data writes.
+
+**Outstanding:** Confirm deployment READY and authenticated UI behavior. Add privileged server-side observability integration for Vercel runtime/deployments, Supabase query health/slow queries/indexes, GitHub CI and dependency security; store weekly historical snapshots and trend charts; schedule the weekly audit after confirming time. Do not mistake this dashboard for completed infrastructure monitoring. Do not place privileged monitoring tokens in browser code.
