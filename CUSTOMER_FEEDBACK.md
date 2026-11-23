@@ -52,3 +52,18 @@ Purpose: preserve customer-driven requirements, implementation choices, verifica
 **Implementation:** `015_ice_receivables.sql` and `016_disable_legacy_ice_checkout.sql` applied to production. New `ice_sales.paid_cents` with historical records backfilled as paid; payment ledger `ice_sale_payments`; atomic payment-aware `ice_checkout_packs_receivable` and partial/full `ice_record_payment` RPC. Legacy checkout RPC execute privilege revoked to enforce explicit payment status. Guard prevents voiding or changing totals after payments. `src/IceTemples.tsx` checkout paid/unpaid toggle; `src/IceReceivables.tsx` date/customer filters, per-store and all-time balances, partial and full settlement, recent payment history; `src/IceSalesReports.tsx` payment status and collections section. No test sales, stock mutations or payments made.
 
 **Limitations:** Full-balance button is per delivery; paying an entire customer's multiple deliveries in one atomic action is not yet implemented. Payment history lists 500 most recent collection payments; paid-at-checkout payments are not in that ledger. Receivables calculation refuses to claim completeness beyond 20,000 loaded sales. Sale corrections are disabled in UI for outstanding bills until a payment-aware correction workflow is added. No refunds/payment reversal UI. Verify production deployment and authenticated flows before customer acceptance.
+
+## 2026-11-23 — Financial accuracy is a release-blocking priority
+
+**Owner priority:** Real clients may abandon the product if sales, profits, expenses, collections, or stock do not match reliable spreadsheet records. Financial integrity is more important than feature velocity.
+
+**Acceptance requirements for future work:**
+- Clearly distinguish sales/revenue, cash received, outstanding receivables, expenses and accounting profit; do not label sales minus recorded expenses as full accounting profit without complete cost coverage.
+- Reconcile per-sale balances: amount due = sale total − recorded payments; never count settlement as a new sale or deduct stock twice.
+- Reconcile inventory: opening stock + production + corrections + void returns − sold packs = closing stock, with an auditable movement trail.
+- Test checkout, partial payments, full payments, duplicate requests, simultaneous payments, void/correction restrictions, date boundaries, rounding, cross-store access and report export.
+- Maintain an isolated test environment with known expected totals. Compare outputs against independent spreadsheet/manual calculations before release.
+- Make discrepancies visible, not silently adjusted. Preserve historical entries and use audit-backed corrections.
+- Never run synthetic sales/payments or destructive fixes in production.
+
+**Known risks to resolve:** current report's “Profit (sales − expenses)” is not necessarily accounting profit; legacy sales were initialized as paid during receivables migration; collection payments and paid-at-checkout amounts need consistent reporting; corrections/voids require payment-aware workflows; some report queries have pagination limits. Build/deployment success is not proof of financial correctness.
