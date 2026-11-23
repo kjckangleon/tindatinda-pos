@@ -129,3 +129,8 @@ Store owners/managers and platform admins can edit product names, barcodes, and 
 ## Sprint 1 — Inventory dashboard and history (migrations 007–008)
 
 Inventory now shows total, out-of-stock and low-stock product counts with All / Low / Out filters. Each product has a configurable reorder threshold (default 5, 0 disables low-stock warning). Owners/managers and platform admins can change thresholds in Edit Product; cashier permissions are unchanged. The inventory movement history shows the latest 100 movements with product, signed quantity, reason, timestamp and a shortened actor UUID; it uses the existing RLS-restricted inventory_movements table and does not disclose history to cashiers. Movement records include sales and manual stock adjustments, but product creation is not currently logged as a movement. The atomic update_inventory_product_with_reorder RPC saves price/name/barcode/threshold/stock and audit movement in a single database transaction. Apply migrations 007 and 008 before deploying the frontend. No production stock quantities are modified by these migrations.
+
+
+## Customer feedback and product decision history
+
+See [CUSTOMER_FEEDBACK.md](./CUSTOMER_FEEDBACK.md) for a chronological, implementation-linked record of real-store feedback, decisions, deployment verification and open follow-ups. Preserve customer data and do not confuse a successful Vercel build with authenticated functional testing.
