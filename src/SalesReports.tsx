@@ -8,6 +8,7 @@ const php=(value:number)=>new Intl.NumberFormat('en-PH',{style:'currency',curren
 const localDay=(iso:string)=>new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Manila'});
 export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;storeId:string;storeName:string}){
  const [sales,setSales]=useState<Sale[]>([]);
+ const [visibleCount,setVisibleCount]=useState(3);
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState('');
  const [day,setDay]=useState(()=>localDay(new Date().toISOString()));
@@ -24,6 +25,7 @@ export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;s
    if(!cancelled){setSales(all);setError(failure);setLoading(false)}}
   void load();return()=>{cancelled=true};
  },[client,storeId]);
+ useEffect(()=>{setVisibleCount(3);setSelected(null)},[storeId,day,endDay]);
  const filtered=useMemo(()=>sales.filter(s=>localDay(s.created_at)>=day&&localDay(s.created_at)<=endDay),[sales,day,endDay]);
  useEffect(()=>{let cancelled=false;setSaleItems({});setItemsError('');if(!storeId||!filtered.length){setItemsLoading(false);return}const load=async()=>{setItemsLoading(true);try{const allLines:Line[]=[];for(let i=0;i<filtered.length;i+=150){const ids=filtered.slice(i,i+150).map(s=>s.id);const {data,error}=await client.from('sale_lines').select('id,sale_id,product_id,qty,unit_price_cents').in('sale_id',ids);if(error)throw error;allLines.push(...(data??[]))}const ids=[...new Set(allLines.map(l=>l.product_id))];const productNames:Record<string,string>={};for(let i=0;i<ids.length;i+=150){const {data,error}=await client.from('products').select('id,name').eq('store_id',storeId).in('id',ids.slice(i,i+150));if(error)throw error;for(const p of data??[])productNames[p.id]=p.name}const grouped:Record<string,string[]>={};for(const l of allLines)(grouped[l.sale_id]??=[]).push((productNames[l.product_id]??'Product '+l.product_id.slice(0,8))+' ×'+l.qty);if(!cancelled)setSaleItems(Object.fromEntries(Object.entries(grouped).map(([id,items])=>[id,items.join(', ')])))}catch(e){if(!cancelled)setItemsError(e instanceof Error?e.message:'Could not load sale items')}finally{if(!cancelled)setItemsLoading(false)}};void load();return()=>{cancelled=true}},[client,storeId,filtered]);
  const gross=filtered.reduce((n,s)=>n+Number(s.total_cents),0);
@@ -49,7 +51,9 @@ export function SalesReports({client,storeId,storeName}:{client:SupabaseClient;s
   {loading&&<p role="status">Loading sales…</p>}{error&&<p role="alert" className="error">{error}</p>}
   {!loading&&!filtered.length&&<p>No sales found for this date.</p>}
   {itemsError&&<p role="alert" className="error">Product details unavailable: {itemsError}</p>}
-  {filtered.map(s=><div className="item sale-transaction" key={s.id}><div className="sale-transaction-info"><strong>{saleItems[s.id]??(itemsLoading?'Loading products…':'Products unavailable')}</strong><span className="muted small">{new Date(s.created_at).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'})} · Transaction #{s.id.slice(0,8)}</span></div><strong className="sale-transaction-total">{php(Number(s.total_cents))}</strong><button className="icon-button" type="button" onClick={()=>void openReceipt(s)}>View receipt</button></div>)}
+  {filtered.slice(0,visibleCount).map(s=><div className="item sale-transaction" key={s.id}><div className="sale-transaction-info"><strong>{saleItems[s.id]??(itemsLoading?'Loading products…':'Products unavailable')}</strong><span className="muted small">{new Date(s.created_at).toLocaleTimeString('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'})} · Transaction #{s.id.slice(0,8)}</span></div><strong className="sale-transaction-total">{php(Number(s.total_cents))}</strong><button className="icon-button" type="button" onClick={()=>void openReceipt(s)}>View receipt</button></div>)}
+  {filtered.length>visibleCount&&<button type="button" onClick={()=>setVisibleCount(n=>Math.min(n+10,filtered.length))}>Show 10 more transactions ({filtered.length-visibleCount} remaining)</button>}
+  {filtered.length>3&&visibleCount>3&&<button type="button" onClick={()=>setVisibleCount(3)}>Show latest 3 only</button>}
   {receiptError&&<p role="alert" className="error">{receiptError}</p>}
   {selected&&<div className="receipt-panel"><div className="receipt-print"><h2>{storeName}</h2><p>Sales receipt · #{selected.id.slice(0,8)}</p><p>{new Date(selected.created_at).toLocaleString('en-PH',{timeZone:'Asia/Manila'})}</p>
     {lines.map(line=><div className="item" key={line.id}><span>{names[line.product_id]??'Product '+line.product_id.slice(0,8)} · {line.qty} × {php(line.unit_price_cents)}</span><strong>{php(line.qty*line.unit_price_cents)}</strong></div>)}
